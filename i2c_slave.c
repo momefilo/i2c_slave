@@ -10,6 +10,9 @@
 #include "hardware/irq.h"
 #include "hardware/gpio.h"
 #include <stdio.h>
+#include <string.h>
+
+mp_obj_t callback_obj;
 
 typedef struct i2c_slave {
     i2c_slave_handler_t handler;
@@ -24,6 +27,8 @@ static void __isr __not_in_flash_func(i2c_slave_irq_handler)(void) {
     i2c_inst_t *i2c = i2c_get_instance(i2c_index);
     i2c_hw_t *hw = i2c_get_hw(i2c);
 
+    extern mp_obj_t callback_obj;
+    
     uint32_t intr_stat = hw->intr_stat;
     if (intr_stat == 0) {
         return;
@@ -42,17 +47,23 @@ static void __isr __not_in_flash_func(i2c_slave_irq_handler)(void) {
         do_finish_transfer = true;
     }
     if (do_finish_transfer && slave->transfer_in_progress) {
-        slave->handler(i2c, I2C_SLAVE_FINISH);
+        mp_obj_t ret = mp_obj_new_str("I2C_SLAVE_FINISH", strlen("I2C_SLAVE_FINISH"));
+        mp_call_function_2(callback_obj, i2c, ret);
+//        slave->handler(i2c, I2C_SLAVE_FINISH);
         slave->transfer_in_progress = false;
     }
     if (intr_stat & I2C_IC_INTR_STAT_R_RX_FULL_BITS) {
         slave->transfer_in_progress = true;
-        slave->handler(i2c, I2C_SLAVE_RECEIVE);
+        mp_obj_t ret = mp_obj_new_str("I2C_SLAVE_RECEIVE", strlen("I2C_SLAVE_RECEIVE"));
+        mp_call_function_2((callback_obj), i2c, ret);
+//        slave->handler(i2c, I2C_SLAVE_RECEIVE);
     }
     if (intr_stat & I2C_IC_INTR_STAT_R_RD_REQ_BITS) {
         hw->clr_rd_req;
         slave->transfer_in_progress = true;
-        slave->handler(i2c, I2C_SLAVE_REQUEST);
+        mp_obj_t ret = mp_obj_new_str("I2C_SLAVE_REQUEST", strlen("I2C_SLAVE_REQUEST"));
+        mp_call_function_2(callback_obj, i2c, ret);
+//        slave->handler(i2c, I2C_SLAVE_REQUEST);
     }
 }
 static mp_obj_t _i2c_slave_irq_handler(void) {
@@ -60,13 +71,28 @@ static mp_obj_t _i2c_slave_irq_handler(void) {
 }
 MP_DEFINE_CONST_FUN_OBJ_0(i2c_slave_irq_handler_obj, _i2c_slave_irq_handler);
 
+// Die readfunktion
+static mp_obj_t _i2c_read(mp_obj_t i2c) {
+    i2c_inst_t *_i2c = MP_OBJ_TO_PTR(i2c);
+    return mp_obj_new_int(i2c_read_byte_raw((_i2c)));
+}
+MP_DEFINE_CONST_FUN_OBJ_1(i2c_read_obj, _i2c_read);
+
+// Die writefunktion
+static mp_obj_t _i2c_write(mp_obj_t i2c, mp_obj_t data) {
+    i2c_inst_t *_i2c = MP_OBJ_TO_PTR(i2c);
+    uint8_t _data = mp_obj_get_int(data);
+    i2c_write_byte_raw(_i2c, _data);
+    return mp_const_none;
+}
+MP_DEFINE_CONST_FUN_OBJ_2(i2c_write_obj, _i2c_write);
+
 // Die init-Funktion
 void i2c_slave_init(i2c_inst_t *i2c, uint8_t address, i2c_slave_handler_t handler) {
     assert(i2c == i2c0 || i2c == i2c1);
     assert(handler != NULL);
 
     uint i2c_index = i2c_hw_index(i2c);
-    printf("index= %d\n", i2c_index);
     i2c_slave_t *slave = &i2c_slaves[i2c_index];
     slave->handler = handler;
 
@@ -84,7 +110,7 @@ void i2c_slave_init(i2c_inst_t *i2c, uint8_t address, i2c_slave_handler_t handle
     uint num = I2C0_IRQ + i2c_index;
     irq_set_exclusive_handler(num, i2c_slave_irq_handler);
     irq_set_enabled(num, true);
-    printf("OK 3\n");
+    printf("i2c_slave.init(%d)\n", i2c_index);
 }
 static mp_obj_t _i2c_slave_init(size_t n_args, const mp_obj_t *args) {
     uint8_t _i2c = mp_obj_get_int(args[0]);
@@ -92,8 +118,11 @@ static mp_obj_t _i2c_slave_init(size_t n_args, const mp_obj_t *args) {
     uint8_t _scl = mp_obj_get_int(args[2]);
     uint _bdrate = mp_obj_get_int(args[3]);
     uint8_t _address = mp_obj_get_int(args[4]);
+    
     i2c_slave_handler_t _handler = MP_OBJ_TO_PTR(args[5]);
-    printf("%d, %d, %d\n", _sda, _bdrate, _address);
+//    MP_REGISTER_ROOT_POINTER(mp_obj_t callback_obj);
+    callback_obj = args[5];
+    
     gpio_init(_sda);
     gpio_set_function(_sda, GPIO_FUNC_I2C);
     gpio_pull_up(_sda);
@@ -103,9 +132,7 @@ static mp_obj_t _i2c_slave_init(size_t n_args, const mp_obj_t *args) {
     gpio_pull_up(_scl);
     
     i2c_init(I2C_INSTANCE(_i2c), _bdrate);
-    printf("OK\n");
     i2c_slave_init(I2C_INSTANCE(_i2c), _address, _handler);
-    printf("OK 2\n");
     return mp_const_none;
 }
 MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(i2c_slave_init_obj, 6, 6, _i2c_slave_init);
@@ -129,6 +156,7 @@ void i2c_slave_deinit(i2c_inst_t *i2c) {
     hw->intr_mask = I2C_IC_INTR_MASK_RESET;
 
     i2c_set_slave_mode(i2c, false, 0);
+    i2c_deinit(i2c);
 }
 static mp_obj_t _i2c_slave_deinit(mp_obj_t i2c) {
     i2c_slave_deinit(I2C_INSTANCE((mp_obj_get_int(i2c))));
@@ -142,6 +170,8 @@ static const mp_rom_map_elem_t i2c_slave_module_globals_table[] = {
     { MP_ROM_QSTR(MP_QSTR_irq_handler), MP_ROM_PTR(&i2c_slave_irq_handler_obj) },
     { MP_ROM_QSTR(MP_QSTR_init), MP_ROM_PTR(&i2c_slave_init_obj) },
     { MP_ROM_QSTR(MP_QSTR_deinit), MP_ROM_PTR(&i2c_slave_deinit_obj) },
+    { MP_ROM_QSTR(MP_QSTR_read), MP_ROM_PTR(&i2c_read_obj) },
+    { MP_ROM_QSTR(MP_QSTR_write), MP_ROM_PTR(&i2c_write_obj) },
 };
 static MP_DEFINE_CONST_DICT(i2c_slave_module_globals, i2c_slave_module_globals_table);
 
