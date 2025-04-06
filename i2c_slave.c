@@ -12,6 +12,11 @@
 #include <stdio.h>
 #include <string.h>
 
+
+// SDA/SCL on even/odd pins, I2C0/I2C1 on even/odd pairs of pins.
+#define IS_VALID_SCL(i2c, pin) (((pin) & 1) == 1 && (((pin) & 2) >> 1) == (i2c))
+#define IS_VALID_SDA(i2c, pin) (((pin) & 1) == 0 && (((pin) & 2) >> 1) == (i2c))
+
 mp_obj_t callback_obj;
 
 typedef struct i2c_slave {
@@ -66,19 +71,25 @@ static void __isr __not_in_flash_func(i2c_slave_irq_handler)(void) {
 //        slave->handler(i2c, I2C_SLAVE_REQUEST);
     }
 }
-static mp_obj_t _i2c_slave_irq_handler(void) {
-    return MP_OBJ_FROM_PTR(&i2c_slave_irq_handler);
-}
-MP_DEFINE_CONST_FUN_OBJ_0(i2c_slave_irq_handler_obj, _i2c_slave_irq_handler);
 
-// Die readfunktion
+// Die readBytefunktion
 static mp_obj_t _i2c_read(mp_obj_t i2c) {
     i2c_inst_t *_i2c = MP_OBJ_TO_PTR(i2c);
     return mp_obj_new_int(i2c_read_byte_raw((_i2c)));
 }
 MP_DEFINE_CONST_FUN_OBJ_1(i2c_read_obj, _i2c_read);
 
-// Die writefunktion
+// Die readBlockfunktion
+static mp_obj_t _i2c_readBlock(mp_obj_t i2c, mp_obj_t src, mp_obj_t len) {
+    i2c_inst_t *_i2c = MP_OBJ_TO_PTR(i2c);
+    mp_obj_t _src = MP_OBJ_TO_PTR(src);
+    size_t _len = mp_obj_get_int(len);
+    i2c_read_raw_blocking(_i2c, _src, _len);
+    return mp_const_none;
+}
+MP_DEFINE_CONST_FUN_OBJ_3(i2c_readBlock_obj, _i2c_readBlock);
+
+// Die writeBytefunktion
 static mp_obj_t _i2c_write(mp_obj_t i2c, mp_obj_t data) {
     i2c_inst_t *_i2c = MP_OBJ_TO_PTR(i2c);
     uint8_t _data = mp_obj_get_int(data);
@@ -87,6 +98,15 @@ static mp_obj_t _i2c_write(mp_obj_t i2c, mp_obj_t data) {
 }
 MP_DEFINE_CONST_FUN_OBJ_2(i2c_write_obj, _i2c_write);
 
+// Die writeBlockfunktion
+static mp_obj_t _i2c_writeBlock(mp_obj_t i2c, mp_obj_t src, mp_obj_t len) {
+    i2c_inst_t *_i2c = MP_OBJ_TO_PTR(i2c);
+    mp_obj_t _src = MP_OBJ_TO_PTR(src);
+    size_t _len = mp_obj_get_int(len);
+    i2c_write_raw_blocking(_i2c, _src, _len);
+    return mp_const_none;
+}
+MP_DEFINE_CONST_FUN_OBJ_3(i2c_writeBlock_obj, _i2c_writeBlock);
 // Die init-Funktion
 void i2c_slave_init(i2c_inst_t *i2c, uint8_t address, i2c_slave_handler_t handler) {
     assert(i2c == i2c0 || i2c == i2c1);
@@ -119,6 +139,12 @@ static mp_obj_t _i2c_slave_init(size_t n_args, const mp_obj_t *args) {
     uint _bdrate = mp_obj_get_int(args[3]);
     uint8_t _address = mp_obj_get_int(args[4]);
     
+    if (!IS_VALID_SCL(_i2c, _scl)) {
+            mp_raise_ValueError(MP_ERROR_TEXT("bad SCL pin"));
+    }
+    if (!IS_VALID_SDA(_i2c, _sda)) {
+            mp_raise_ValueError(MP_ERROR_TEXT("bad SDA pin"));
+        }
     i2c_slave_handler_t _handler = MP_OBJ_TO_PTR(args[5]);
 //    MP_REGISTER_ROOT_POINTER(mp_obj_t callback_obj);
     callback_obj = args[5];
@@ -167,11 +193,12 @@ MP_DEFINE_CONST_FUN_OBJ_1(i2c_slave_deinit_obj, _i2c_slave_deinit);
 // Export zu micropython
 static const mp_rom_map_elem_t i2c_slave_module_globals_table[] = {
     { MP_ROM_QSTR(MP_QSTR___name__), MP_ROM_QSTR(MP_QSTR_i2c_slave) },
-    { MP_ROM_QSTR(MP_QSTR_irq_handler), MP_ROM_PTR(&i2c_slave_irq_handler_obj) },
     { MP_ROM_QSTR(MP_QSTR_init), MP_ROM_PTR(&i2c_slave_init_obj) },
     { MP_ROM_QSTR(MP_QSTR_deinit), MP_ROM_PTR(&i2c_slave_deinit_obj) },
-    { MP_ROM_QSTR(MP_QSTR_read), MP_ROM_PTR(&i2c_read_obj) },
-    { MP_ROM_QSTR(MP_QSTR_write), MP_ROM_PTR(&i2c_write_obj) },
+    { MP_ROM_QSTR(MP_QSTR_readByte), MP_ROM_PTR(&i2c_read_obj) },
+    { MP_ROM_QSTR(MP_QSTR_readBlock), MP_ROM_PTR(&i2c_readBlock_obj) },
+    { MP_ROM_QSTR(MP_QSTR_writeByte), MP_ROM_PTR(&i2c_write_obj) },
+    { MP_ROM_QSTR(MP_QSTR_writeBlock), MP_ROM_PTR(&i2c_writeBlock_obj) },
 };
 static MP_DEFINE_CONST_DICT(i2c_slave_module_globals, i2c_slave_module_globals_table);
 
