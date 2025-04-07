@@ -1,4 +1,4 @@
-## Ein micropython- Port für pico und pico_w mit i2c_slave-Modul\
+## Ein micropython- Port für pico und pico_w mit i2c_slave-Modul
 Das Modul wird mit import i2c_slave importiert und vor Benutzung durch Aufruf von
 ```
 i2c_slave.init(i2c-Bus, i2c-Adresse, SDA-Pin, SCL-Pin, i2c-Frequenz, Callback-Funktion)
