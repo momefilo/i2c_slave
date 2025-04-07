@@ -18,7 +18,8 @@ Der Slavehandle hat drei moegliche Werte: "I2C_SLAVE_RECEIVE", "I2C_SLAVE_REQUES
 Das Modul bietet zwei Lese- und zwei Schreibfunktionen
 ```
 i2c_slave.readByte(i2c_bus)
-``` liest ein Byte
+```
+liest ein Byte
 ```
 i2c_slave.readBlock(i2c_bus Pointer, Laenge) 
 ```
