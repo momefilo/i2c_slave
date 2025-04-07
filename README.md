@@ -33,7 +33,7 @@ schreibt ein Byte
 ```
 i2c_slave.writeBlock(i2c_bus, Pointer, Laenge)
 ```
-schreibt Laenge Bytes aus dem Speicher Pointer auf den i2c-Bus und ich habe noch keine python-Implementierung gefunden\
+schreibt Laenge Bytes aus dem Speicher Pointer auf den i2c-Bus und ich habe noch keine python-Implementierung gefunden
 
 # Bekannte Fehler:
 Mit einem RPi als Master wird das erste Daten-Byte oft als 0xFF interpretiert
