@@ -21,7 +21,7 @@ i2c_slave.readByte(i2c_bus)
 ```
 liest ein Byte
 ```
-i2c_slave.readBlock(i2c_bus Pointer, Laenge) 
+i2c_slave.readBlock(i2c_bus, Pointer, Laenge) 
 ```
 liest len Bytes in den Speicher Pointer und ich habe noch keine python-Implementierung gefunden
 ```
@@ -29,7 +29,7 @@ i2c_slave.writeByte(i2c_bus)
 ```
 schreibt ein Byte
 ```
-i2c_slave.readBlock(i2c_bus Pointer, Laenge)
+i2c_slave.readBlock(i2c_bus, Pointer, Laenge)
 ```
 schreibt len Bytes aus dem Speicher Pointer auf den i2c-Bus und ich habe noch keine python-Implementierung gefunden\
 
