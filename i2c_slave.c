@@ -17,6 +17,7 @@
 #define IS_VALID_SCL(i2c, pin) (((pin) & 1) == 1 && (((pin) & 2) >> 1) == (i2c))
 #define IS_VALID_SDA(i2c, pin) (((pin) & 1) == 0 && (((pin) & 2) >> 1) == (i2c))
 
+// Variable fuer die micropython-Callback-Funktion
 mp_obj_t callback_obj;
 
 typedef struct i2c_slave {
@@ -25,7 +26,7 @@ typedef struct i2c_slave {
 } i2c_slave_t;
 
 static i2c_slave_t i2c_slaves[2];
-// Die callback-Funktion
+
 static void __isr __not_in_flash_func(i2c_slave_irq_handler)(void) {
     uint i2c_index = __get_current_exception() - VTABLE_FIRST_IRQ - I2C0_IRQ;
     i2c_slave_t *slave = &i2c_slaves[i2c_index];
@@ -72,14 +73,12 @@ static void __isr __not_in_flash_func(i2c_slave_irq_handler)(void) {
     }
 }
 
-// Die readBytefunktion
 static mp_obj_t _i2c_read(mp_obj_t i2c) {
     i2c_inst_t *_i2c = MP_OBJ_TO_PTR(i2c);
     return mp_obj_new_int(i2c_read_byte_raw((_i2c)));
 }
 MP_DEFINE_CONST_FUN_OBJ_1(i2c_read_obj, _i2c_read);
 
-// Die readBlockfunktion
 static mp_obj_t _i2c_readBlock(mp_obj_t i2c, mp_obj_t src, mp_obj_t len) {
     i2c_inst_t *_i2c = MP_OBJ_TO_PTR(i2c);
     mp_obj_t _src = MP_OBJ_TO_PTR(src);
@@ -89,7 +88,6 @@ static mp_obj_t _i2c_readBlock(mp_obj_t i2c, mp_obj_t src, mp_obj_t len) {
 }
 MP_DEFINE_CONST_FUN_OBJ_3(i2c_readBlock_obj, _i2c_readBlock);
 
-// Die writeBytefunktion
 static mp_obj_t _i2c_write(mp_obj_t i2c, mp_obj_t data) {
     i2c_inst_t *_i2c = MP_OBJ_TO_PTR(i2c);
     uint8_t _data = mp_obj_get_int(data);
@@ -98,7 +96,6 @@ static mp_obj_t _i2c_write(mp_obj_t i2c, mp_obj_t data) {
 }
 MP_DEFINE_CONST_FUN_OBJ_2(i2c_write_obj, _i2c_write);
 
-// Die writeBlockfunktion
 static mp_obj_t _i2c_writeBlock(mp_obj_t i2c, mp_obj_t src, mp_obj_t len) {
     i2c_inst_t *_i2c = MP_OBJ_TO_PTR(i2c);
     mp_obj_t _src = MP_OBJ_TO_PTR(src);
@@ -107,7 +104,7 @@ static mp_obj_t _i2c_writeBlock(mp_obj_t i2c, mp_obj_t src, mp_obj_t len) {
     return mp_const_none;
 }
 MP_DEFINE_CONST_FUN_OBJ_3(i2c_writeBlock_obj, _i2c_writeBlock);
-// Die init-Funktion
+
 void i2c_slave_init(i2c_inst_t *i2c, uint8_t address, i2c_slave_handler_t handler) {
     assert(i2c == i2c0 || i2c == i2c1);
     assert(handler != NULL);
@@ -130,7 +127,6 @@ void i2c_slave_init(i2c_inst_t *i2c, uint8_t address, i2c_slave_handler_t handle
     uint num = I2C0_IRQ + i2c_index;
     irq_set_exclusive_handler(num, i2c_slave_irq_handler);
     irq_set_enabled(num, true);
-    printf("i2c_slave.init(%d)\n", i2c_index);
 }
 static mp_obj_t _i2c_slave_init(size_t n_args, const mp_obj_t *args) {
     uint8_t _i2c = mp_obj_get_int(args[0]);
@@ -163,7 +159,6 @@ static mp_obj_t _i2c_slave_init(size_t n_args, const mp_obj_t *args) {
 }
 MP_DEFINE_CONST_FUN_OBJ_VAR_BETWEEN(i2c_slave_init_obj, 6, 6, _i2c_slave_init);
 
-// Die deinit-Funktion
 void i2c_slave_deinit(i2c_inst_t *i2c) {
     assert(i2c == i2c0 || i2c == i2c1);
 
@@ -202,11 +197,9 @@ static const mp_rom_map_elem_t i2c_slave_module_globals_table[] = {
 };
 static MP_DEFINE_CONST_DICT(i2c_slave_module_globals, i2c_slave_module_globals_table);
 
-// Define module object.
 const mp_obj_module_t i2c_slave_user_cmodule = {
     .base = { &mp_type_module },
     .globals = (mp_obj_dict_t *)&i2c_slave_module_globals,
 };
 
-// Register the module to make it available in Python.
 MP_REGISTER_MODULE(MP_QSTR_i2c_slave, i2c_slave_user_cmodule);
