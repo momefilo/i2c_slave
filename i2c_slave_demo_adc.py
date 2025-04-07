@@ -22,7 +22,6 @@ def set_led(val):
 
 def get_adc(val):
   global data
-  print("ADC(", val, ")")
   data = ADC(val).read_u16()
 
 # Diese Funktion wird zur Initialisierung benötigt
