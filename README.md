@@ -11,6 +11,8 @@ vor neu initialisierung deinitialisiert\
 Die Callbackfunktion muss den i2c-Bus als ersten, und den i2c-Slavehandle als zweiten Parameter aufnehmen koennen. Sie wird mittels eines IRQ-s durch den i2c-Master per read/write aufgerufen. Z.B.
 ```
 def callback (i2c_bus, handle):
+    print(i2c_bus, handle)
+i2c_slave.init(0, 4, 5, 400*1000, 0x47, callback)
 ```
 (Siehe i2c_slave_demo_adc.py)\
 Der Slavehandle hat drei moegliche Werte: "I2C_SLAVE_RECEIVE", "I2C_SLAVE_REQUEST" und "I2C_SLAVE_FINISH"\
