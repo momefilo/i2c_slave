@@ -33,6 +33,6 @@ i2c_slave.readBlock(i2c_bus Pointer, Laenge)
 ```
 schreibt len Bytes aus dem Speicher Pointer auf den i2c-Bus und ich habe noch keine python-Implementierung gefunden\
 
-' Bekannte Fehler:
+# Bekannte Fehler:
 Mit einem RPi als Master wird das erste Daten-Byte oft als 0xFF interpretiert\
 Abhilfe: Einmalig mit dem Master zu erst eine leere Adresse oder i2cdetect aufrufen
