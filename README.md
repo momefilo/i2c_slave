@@ -1,5 +1,9 @@
 ## Ein micropython- Port für pico und pico_w mit i2c_slave-Modul
-Das Modul wird mit import i2c_slave importiert und vor Benutzung durch Aufruf von
+Das Modul wird mit 
+```
+import i2c_slave
+```
+importiert und vor Benutzung durch Aufruf von
 ```
 i2c_slave.init(i2c-Bus, SDA-Pin, SCL-Pin, i2c-Frequenz, i2c-Adresse, Callback-Funktion)
 ```
@@ -8,7 +12,7 @@ initialisiert, und mit
 i2c_slave.deinit(i2c-Bus)
 ```
 vor neu initialisierung deinitialisiert\
-Die Callbackfunktion muss den i2c-Bus als ersten, und den i2c-Slavehandle als zweiten Parameter aufnehmen koennen. Sie wird mittels eines IRQ-s durch den i2c-Master per read/write aufgerufen. Z.B.
+Die Callbackfunktion muss den i2c-Bus als ersten, und den i2c-Slavehandle als zweiten Parameter aufnehmen koennen. Sie wird mittels eines IRQ's durch den i2c-Master per read/write aufgerufen. Z.B.
 ```
 def callback (i2c_bus, handle):
     print(i2c_bus, handle)
