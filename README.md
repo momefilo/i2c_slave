@@ -27,17 +27,18 @@ i2c_slave.readByte(i2c_bus)
 ```
 liest ein Byte als Rueckgabewert
 ```
-i2c_slave.readBlock(i2c_bus, Pointer, Laenge) 
+i2c_slave.readBlock(i2c_bus, Laenge) 
 ```
-liest Laenge Bytes in den Speicher Pointer und ich habe noch keine python-Implementierung gefunden
+liest Laenge Bytes in eine list als Rueckgabewert
 ```
 i2c_slave.writeByte(i2c_bus, data)
 ```
 schreibt ein Byte
 ```
-i2c_slave.writeBlock(i2c_bus, Pointer, Laenge)
+liste = [1,2,3,4]
+i2c_slave.writeBlock(i2c_bus, liste, 4)
 ```
-schreibt Laenge Bytes aus dem Speicher Pointer auf den i2c-Bus und ich habe noch keine python-Implementierung gefunden
+schreibt n Bytes aus einer list auf den i2c-Bus
 
 # Bekannte Fehler:
 Mit einem RPi als Master wird das erste Daten-Byte oft als 0xFF interpretiert
