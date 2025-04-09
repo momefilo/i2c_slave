@@ -1,7 +1,7 @@
 # momefilo i2c_slave_demo_adc.py
-# Das ist ein Demoprogramm für das i2c_slave-Modul  (getestet auf pico_w)
-# Das die vier ADC's auslest und die onboard-LED schaltet
-# Verbinde die pico-i2c-pins mit einem RPi-i2c-Bus und führe volgende Befehle aus
+# Ein Demoprogramm für das i2c_slave-Modul  (getestet auf pico_w)
+# das die vier ADC's ausliest und die onboard-LED schaltet
+# Verbinde die pico-i2c-pins mit einem RPi-i2c-Bus und führe folgende Befehle aus
 # Mit i2cget -y 1 0x47 (0x00 bis 0x04) i 2 wird zuerst 
 # das Highbyte und dann das Lowbyte der ADC(0) bis ADC(4) empfangen
 # Mit i2cset -y 1 0x47 0x05 0x01 wird die Onboard-led ein -und
@@ -13,7 +13,7 @@ import time
 
 led = Pin("LED", Pin.OUT)# an pico ohne w anzupassen
 data = 0# Aktueller ADC-Wert
-receive = -1# led-Schaltung benoetigte Variable zur Trennung von Adress- und Datenbyte
+receive = -1# Die led-Schaltung benoetigt diese Variable zur Trennung von Adress- und Datenbyte
 
 def set_led(val):
   if val == 0:
