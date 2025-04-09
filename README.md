@@ -19,8 +19,8 @@ def callback (i2c_bus, handle):
 
 i2c_slave.init(0, 4, 5, 400*1000, 0x47, callback)
 ```
+Der Slavehandle hat drei moegliche Werte: "I2C_SLAVE_RECEIVE", "I2C_SLAVE_REQUEST" und "I2C_SLAVE_FINISH"\
 Siehe [i2c_slave_demo_adc.py](i2c_slave_demo_adc.py)\
-Der Slavehandle hat drei moegliche Werte: "I2C_SLAVE_RECEIVE", "I2C_SLAVE_REQUEST" und "I2C_SLAVE_FINISH"
 
 Das Modul bietet zwei Lese- und zwei Schreibfunktionen
 ```
