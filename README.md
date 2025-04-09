@@ -16,6 +16,7 @@ Die Callbackfunktion muss den i2c-Bus als ersten, und den i2c-Slavehandle als zw
 ```
 def callback (i2c_bus, handle):
     print(i2c_bus, handle)
+
 i2c_slave.init(0, 4, 5, 400*1000, 0x47, callback)
 ```
 (Siehe i2c_slave_demo_adc.py)\
