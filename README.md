@@ -45,8 +45,9 @@ i2c_slave.writeBlock(i2c_bus, liste, 4)
 schreibt n Bytes aus einer list auf den i2c-Bus
 
 # Bekannte Fehler:
-Mit einem RPi als Master wird das erste Daten-Byte oft als 0xFF interpretiert,
-Abhilfe: Einmalig mit dem Master zu erst eine leere Adresse oder i2cdetect aufrufen
+Mit einem RPi als Master wird das erste Daten-Byte oft als 0xFF interpretiert\
+Abhilfe:\
+Einmalig mit dem Master zu erst eine leere Adresse oder i2cdetect aufrufen
 
 Download MicroPython v1.25.0-preview-firmware for [rp2/pico](pico_i2c_slave.uf2)\
 Download MicroPython v1.25.0-preview-firmware for [rp2/pico_w](pico_w_i2c_slave.uf2)
