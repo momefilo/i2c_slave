@@ -79,14 +79,20 @@ static mp_obj_t _i2c_read(mp_obj_t i2c) {
 }
 MP_DEFINE_CONST_FUN_OBJ_1(i2c_read_obj, _i2c_read);
 
-static mp_obj_t _i2c_readBlock(mp_obj_t i2c, mp_obj_t src, mp_obj_t len) {
+static mp_obj_t _i2c_readBlock(mp_obj_t i2c, mp_obj_t len) {
     i2c_inst_t *_i2c = MP_OBJ_TO_PTR(i2c);
-    mp_obj_t _src = MP_OBJ_TO_PTR(src);
     size_t _len = mp_obj_get_int(len);
-    i2c_read_raw_blocking(_i2c, _src, _len);
-    return mp_const_none;
+    
+    uint8_t buf[_len];
+    i2c_read_raw_blocking(_i2c, buf, _len);
+    mp_obj_t m_buf[_len];
+    for(int i=0; i <= _len; i++) {
+        m_buf[i] = mp_obj_new_int(buf[i]);
+    }
+    return mp_obj_new_list(_len, m_buf);
+//    return mp_const_none;
 }
-MP_DEFINE_CONST_FUN_OBJ_3(i2c_readBlock_obj, _i2c_readBlock);
+MP_DEFINE_CONST_FUN_OBJ_2(i2c_readBlock_obj, _i2c_readBlock);
 
 static mp_obj_t _i2c_write(mp_obj_t i2c, mp_obj_t data) {
     i2c_inst_t *_i2c = MP_OBJ_TO_PTR(i2c);
@@ -98,9 +104,16 @@ MP_DEFINE_CONST_FUN_OBJ_2(i2c_write_obj, _i2c_write);
 
 static mp_obj_t _i2c_writeBlock(mp_obj_t i2c, mp_obj_t src, mp_obj_t len) {
     i2c_inst_t *_i2c = MP_OBJ_TO_PTR(i2c);
-    mp_obj_t _src = MP_OBJ_TO_PTR(src);
     size_t _len = mp_obj_get_int(len);
-    i2c_write_raw_blocking(_i2c, _src, _len);
+    mp_obj_iter_buf_t iter_buf;
+    mp_obj_t item, iterable = mp_getiter(src, &iter_buf);
+    uint8_t buf[_len];
+    int i = 0;
+    while ((item = mp_iternext(iterable)) != MP_OBJ_STOP_ITERATION) {
+        buf[i] = mp_obj_get_int(item);
+        i++;
+    }
+    i2c_write_raw_blocking(_i2c, buf, _len);
     return mp_const_none;
 }
 MP_DEFINE_CONST_FUN_OBJ_3(i2c_writeBlock_obj, _i2c_writeBlock);
